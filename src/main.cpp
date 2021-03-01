@@ -1,7 +1,126 @@
-#include <cstdint>
-
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
+
+#include <cstdint>
+#include <type_traits>
+#include <vector>
+
+#include <assert.h>
+
+template <typename E> struct enable_bitmask_operators {
+  static const bool enable = false;
+};
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E>::type
+operator|(E lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  return static_cast<E>(static_cast<underlying>(lhs) |
+                        static_cast<underlying>(rhs));
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E>::type
+operator&(E lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  return static_cast<E>(static_cast<underlying>(lhs) &
+                        static_cast<underlying>(rhs));
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E>::type
+operator^(E lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  return static_cast<E>(static_cast<underlying>(lhs) ^
+                        static_cast<underlying>(rhs));
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E>::type
+operator~(E lhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  return static_cast<E>(~static_cast<underlying>(lhs));
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E &>::type
+operator|=(E &lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  lhs = static_cast<E>(static_cast<underlying>(lhs) |
+                       static_cast<underlying>(rhs));
+  return lhs;
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E &>::type
+operator&=(E &lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  lhs = static_cast<E>(static_cast<underlying>(lhs) &
+                       static_cast<underlying>(rhs));
+  return lhs;
+}
+
+template <typename E>
+typename std::enable_if<enable_bitmask_operators<E>::enable, E &>::type
+operator^=(E &lhs, E rhs) {
+  typedef typename std::underlying_type<E>::type underlying;
+  lhs = static_cast<E>(static_cast<underlying>(lhs) ^
+                       static_cast<underlying>(rhs));
+  return lhs;
+}
+
+enum class ColorBits : uint32_t {
+  R = 1 << 0,
+  G = 1 << 1,
+  B = 1 << 2,
+  A = 1 << 3,
+};
+
+template <> struct enable_bitmask_operators<ColorBits> {
+  static const bool enable = true;
+};
+
+uint32_t CountColorBits(ColorBits color) {
+  uint32_t count = 0;
+  if (static_cast<uint32_t>(color & ColorBits::R) != 0) {
+    count++;
+  }
+  if (static_cast<uint32_t>(color & ColorBits::G) != 0) {
+    count++;
+  }
+  if (static_cast<uint32_t>(color & ColorBits::B) != 0) {
+    count++;
+  }
+  if (static_cast<uint32_t>(color & ColorBits::A) != 0) {
+    count++;
+  }
+  return count;
+}
+
+template <class ComponentFormatT> class CPUImage {
+public:
+  CPUImage(uint32_t width, uint32_t height, ColorBits colors)
+      : m_width(width), m_height(height), m_colors(colors) {
+    m_componentCount = CountColorBits(colors);
+    m_rowStride = m_componentCount * m_width;
+
+    m_imageData.resize(m_width * m_height * m_componentCount);
+  }
+
+  ComponentFormatT *getPixelData(uint32_t w, uint32_t h) {
+    return &m_imageData[(m_rowStride * h) + w];
+  }
+
+  // TODO Add 2d operator()
+
+  // private:
+  std::vector<ComponentFormatT> m_imageData;
+  uint32_t m_width;
+  uint32_t m_height;
+  ColorBits m_colors;
+  uint32_t m_componentCount;
+  uint32_t m_rowStride; // needed?
+};
 
 uint32_t encodePixelIntoRGBA32(const double *pixelRGB,
                                const SDL_PixelFormat *format) {
@@ -20,7 +139,8 @@ uint32_t encodePixelIntoRGBA32(const double *pixelRGB,
   return encodedColor;
 }
 
-void uploadStagingImageToTexture(const double *stagingImage,
+template <class T>
+void uploadStagingImageToTexture(const CPUImage<T> &stagingImage,
                                  SDL_Texture *outputTexture) {
 
   SDL_Surface *outputSurface;
@@ -28,21 +148,23 @@ void uploadStagingImageToTexture(const double *stagingImage,
 
   const SDL_PixelFormat *textureFormat = outputSurface->format;
 
-  // assert staging image matches output surface
-  // convert each pixel
+  assert(stagingImage.m_width == outputSurface->w);
+  assert(stagingImage.m_height == outputSurface->h);
+  assert(stagingImage.m_componentCount == 3); // TODO Derive from SDL_PixelFormat
 
   uint32_t *outputTexData = static_cast<uint32_t *>(outputSurface->pixels);
   for (uint32_t rowIndex = 0; rowIndex < (uint32_t)outputSurface->h;
        rowIndex++) {
-    uint32_t *rowAddress = outputTexData + ((rowIndex * outputSurface->pitch) /
-                                            textureFormat->BytesPerPixel);
+    const uint32_t inputRowOffset = stagingImage.m_rowStride * rowIndex;
+    uint32_t *outputRowAddress =
+        outputTexData +
+        ((rowIndex * outputSurface->pitch) / textureFormat->BytesPerPixel);
     for (uint32_t colIndex = 0; colIndex < (uint32_t)outputSurface->w;
          colIndex++) {
-
-      const size_t rowSize = 3 * outputSurface->w;
-      uint32_t encodedColor = encodePixelIntoRGBA32(
-          &stagingImage[rowIndex * rowSize + (colIndex * 3)], textureFormat);
-      rowAddress[colIndex] = encodedColor;
+      const uint32_t inputOffsetIndex =
+          inputRowOffset + (colIndex * stagingImage.m_componentCount);
+      uint32_t encodedColor = encodePixelIntoRGBA32(&stagingImage.m_imageData[inputOffsetIndex], textureFormat);
+      outputRowAddress[colIndex] = encodedColor;
     }
   }
 
@@ -59,24 +181,24 @@ int main(int argc, char **argv) {
       SDL_CreateWindow("SDL2 Displaying Image", SDL_WINDOWPOS_UNDEFINED,
                        SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
 
-  // Investigate which rendering backend is brought up
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 
-  uint32_t imageWidth = 1280;
-  uint32_t imageHeight = 720;
+  const uint32_t imageWidth = 1280;
+  const uint32_t imageHeight = 720;
 
-  double *stagingImage = new double[imageWidth * imageHeight * 3];
-
+  CPUImage<double> stagingImage(imageWidth, imageHeight,
+                                (ColorBits::R | ColorBits::G | ColorBits::B));
   for (uint32_t y = 0; y < imageHeight; y++) {
+    const uint32_t rowOffset = stagingImage.m_rowStride * y;
     for (uint32_t x = 0; x < imageWidth; x++) {
-      uint32_t offsetIndex = 3 * ((y * imageWidth) + x);
-      stagingImage[offsetIndex + 0] = 0.0f;
-      stagingImage[offsetIndex + 1] = 1.0f;
-      stagingImage[offsetIndex + 2] = 0.0f;
+      const uint32_t offsetIndex =
+          rowOffset + (x * stagingImage.m_componentCount);
+
+      stagingImage.m_imageData[offsetIndex + 0] = 0.0f;
+      stagingImage.m_imageData[offsetIndex + 1] = 1.0f;
+      stagingImage.m_imageData[offsetIndex + 2] = 0.0f;
     }
   }
-
-  //CPUImage<double> stagingImage(imageWidth, imageHeight, (ColorBits::R | ColorBits::G | ColorBits::B));
 
   // Is this the right pixel format?
   SDL_Texture *streamingTexture =
@@ -95,36 +217,7 @@ int main(int argc, char **argv) {
       break;
     }
 
-    // SDL_Surface *surfToUpdate;
-    // SDL_LockTextureToSurface(streamingTexture, NULL, &surfToUpdate);
-
-    // uint32_t *textureData = static_cast<uint32_t *>(surfToUpdate->pixels);
-
-    // uint8_t red = 255;
-    // uint8_t green = 0;
-    // uint8_t blue = 0;
-    // uint8_t alpha = 255;
-
-    // const SDL_PixelFormat *textureFormat = surfToUpdate->format;
-
-    // uint32_t encodedColor = 0;
-    // encodedColor += (red << textureFormat->Rshift) & textureFormat->Rmask;
-    // encodedColor += (green << textureFormat->Gshift) & textureFormat->Gmask;
-    // encodedColor += (blue << textureFormat->Bshift) & textureFormat->Bmask;
-    // encodedColor += (alpha << textureFormat->Ashift) & textureFormat->Amask;
-
-    // for (uint32_t rowIndex = 0; rowIndex < (uint32_t)surfToUpdate->h;
-    //     rowIndex++) {
-    //  uint32_t *rowAddress = textureData + ((rowIndex * surfToUpdate->pitch) /
-    //                                        textureFormat->BytesPerPixel);
-    //  for (uint32_t colIndex = 0; colIndex < (uint32_t)surfToUpdate->w;
-    //       colIndex++) {
-    //    rowAddress[colIndex] = encodedColor;
-    //  }
-    //}
-
-    // SDL_UnlockTexture(streamingTexture);
-
+    //uploadStagingImageToTexture(&stagingImage.m_imageData[0], streamingTexture);
     uploadStagingImageToTexture(stagingImage, streamingTexture);
 
     SDL_RenderCopy(renderer, streamingTexture, NULL, NULL);
