@@ -3,14 +3,17 @@ cmake_minimum_required(VERSION 3.14)
 project(rt-main)
 
 list(APPEND PRIVATE_HDR_FILES
+    AssertUtils.h
     ColorUtils.h
     CPUImage.h
+    Ray.h
     TypedBitmask.h
     Vec3.h
 )
 
 list(APPEND PRIVATE_SRC_FILES
     main.cpp
+    AssertUtils.cpp
     ColorUtils.cpp
 )
 

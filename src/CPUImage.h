@@ -1,5 +1,6 @@
 #pragma once
 
+#include "AssertUtils.h"
 #include "ColorUtils.h"
 
 #include <vector>
@@ -16,6 +17,8 @@ public:
 
   Color3& operator()(uint32_t x, uint32_t y) {
     // TODO assert dimension
+    WKND_ASSERT(x < m_width);
+    WKND_ASSERT(y < m_height);
     return m_imageData[(m_width * y) + x];
   }
 

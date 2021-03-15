@@ -1,13 +1,14 @@
 #define SDL_MAIN_HANDLED
 #include "SDL.h"
 
+#include "AssertUtils.h"
 #include "CPUImage.h"
+#include "Ray.h"
 
-#include <assert.h>
 #include <cstdint>
 #include <vector>
 
-void uploadStagingImageToTexture(CPUImage &stagingImage,
+void UploadStagingImageToTexture(CPUImage &stagingImage,
                                  SDL_Texture *outputTexture) {
 
   SDL_Surface *outputSurface;
@@ -15,8 +16,8 @@ void uploadStagingImageToTexture(CPUImage &stagingImage,
 
   const SDL_PixelFormat *textureFormat = outputSurface->format;
 
-  assert(stagingImage.m_width == outputSurface->w);
-  assert(stagingImage.m_height == outputSurface->h);
+  WKND_ASSERT(stagingImage.m_width == outputSurface->w);
+  WKND_ASSERT(stagingImage.m_height == outputSurface->h);
 
   uint32_t *outputTexData = static_cast<uint32_t *>(outputSurface->pixels);
   for (uint32_t rowIndex = 0; rowIndex < (uint32_t)outputSurface->h;
@@ -35,29 +36,58 @@ void uploadStagingImageToTexture(CPUImage &stagingImage,
   SDL_UnlockTexture(outputTexture);
 }
 
+template <class T> T lerp(double lerpVal, const T &a, const T &b) {
+  return ((1.0 - lerpVal) * a) + (lerpVal * b);
+}
+
+Color3 RayColor(const Ray &r) {
+  Vec3 normalizedRayDirection = normalize(r.direction());
+  double lerpVal = 0.5 * (normalizedRayDirection.y() + 1.0);
+  return lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
+}
+
 int main(int argc, char **argv) {
   bool quitReceived = false;
+
+  // Image info
+  const uint32_t imageWidth = 1280;
+  const uint32_t imageHeight = 720;
+  const double aspectRatio = double(imageWidth) / imageHeight;
+
+  // Camera info
+  double viewportHeight = 2.0f;
+  double viewportWidth = viewportHeight * aspectRatio;
+  double focalLength = 1.0f;
+
+  Point3 camOrigin = Point3(0.0);
+  Vec3 horizontalViewportOffset = Vec3(viewportWidth, 0.0, 0.0);
+  Vec3 verticalViewportOffset = Vec3(0.0, viewportHeight, 0.0);
+  Vec3 upperLeftCorner = camOrigin - (horizontalViewportOffset / 2.0) -
+                         (verticalViewportOffset / 2.0) -
+                         Vec3(0., 0., focalLength);
 
   SDL_SetMainReady();
   SDL_Init(SDL_INIT_VIDEO);
 
   SDL_Window *window =
       SDL_CreateWindow("SDL2 Displaying Image", SDL_WINDOWPOS_UNDEFINED,
-                       SDL_WINDOWPOS_UNDEFINED, 1280, 720, 0);
+                       SDL_WINDOWPOS_UNDEFINED, imageWidth, imageHeight, 0);
 
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 
-  const uint32_t imageWidth = 1280;
-  const uint32_t imageHeight = 720;
-
   CPUImage stagingImage(imageWidth, imageHeight);
   for (uint32_t y = 0; y < imageHeight; y++) {
+    const double v = double(y) / (imageHeight - 1);
+    
     for (uint32_t x = 0; x < imageWidth; x++) {
-      Color3 &col = stagingImage(x, y);
+      const double u = double(x) / (imageWidth - 1);
 
-      col[0] = double(x) / (imageWidth - 1);
-      col[1] = double(y) / (imageHeight - 1);
-      col[2] = 0.0f;
+      const Vec3 rayDirection = upperLeftCorner +
+                                (u * horizontalViewportOffset) +
+                          (v * verticalViewportOffset) - camOrigin;
+      Ray currentRay = Ray(camOrigin, rayDirection);
+
+      stagingImage(x, y) = RayColor(currentRay);
     }
   }
 
@@ -78,7 +108,7 @@ int main(int argc, char **argv) {
       break;
     }
 
-    uploadStagingImageToTexture(stagingImage, streamingTexture);
+    UploadStagingImageToTexture(stagingImage, streamingTexture);
 
     SDL_RenderCopy(renderer, streamingTexture, NULL, NULL);
     SDL_RenderPresent(renderer);
