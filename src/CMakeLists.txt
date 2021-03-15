@@ -2,8 +2,21 @@ cmake_minimum_required(VERSION 3.14)
 
 project(rt-main)
 
-add_executable(${PROJECT_NAME}
+list(APPEND PRIVATE_HDR_FILES
+    ColorUtils.h
+    CPUImage.h
+    TypedBitmask.h
+    Vec3.h
+)
+
+list(APPEND PRIVATE_SRC_FILES
     main.cpp
+    ColorUtils.cpp
+)
+
+add_executable(${PROJECT_NAME}
+    ${PRIVATE_HDR_FILES}
+    ${PRIVATE_SRC_FILES}
 )
 
 target_include_directories(${PROJECT_NAME} PRIVATE
