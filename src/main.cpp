@@ -5,6 +5,7 @@
 #include "CPUImage.h"
 #include "Ray.h"
 
+#include <chrono>
 #include <cstdint>
 #include <vector>
 
@@ -76,20 +77,29 @@ int main(int argc, char **argv) {
   SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, 0);
 
   CPUImage stagingImage(imageWidth, imageHeight);
+
+  auto startTime = std::chrono::system_clock::now();
+  const Vec3 baseRayDirection = upperLeftCorner - camOrigin;
+
   for (uint32_t y = 0; y < imageHeight; y++) {
     const double v = double(y) / (imageHeight - 1);
-    
+    const Vec3 verticalJitter = v * verticalViewportOffset;
     for (uint32_t x = 0; x < imageWidth; x++) {
       const double u = double(x) / (imageWidth - 1);
+      const Vec3 horizontalJitter = u * horizontalViewportOffset;
 
-      const Vec3 rayDirection = upperLeftCorner +
-                                (u * horizontalViewportOffset) +
-                          (v * verticalViewportOffset) - camOrigin;
-      Ray currentRay = Ray(camOrigin, rayDirection);
+      const Vec3 currentPixelJitter = horizontalJitter + verticalJitter;
 
+      Ray currentRay = Ray(camOrigin, baseRayDirection + currentPixelJitter);
       stagingImage(x, y) = RayColor(currentRay);
     }
   }
+  auto endTime = std::chrono::system_clock::now();
+  auto duration = endTime - startTime;
+  auto durationMilliseconds =
+      std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
+
+  std::cout << "Image generation time: " << durationMilliseconds << " ms" << '\n';
 
   // Is this the right pixel format?
   SDL_Texture *streamingTexture =
