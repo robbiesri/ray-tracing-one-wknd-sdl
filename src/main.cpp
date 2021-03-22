@@ -127,7 +127,12 @@ int main(int argc, char **argv) {
       const Vec3 currentPixelJitter = horizontalJitter + verticalJitter;
 
       Ray currentRay = Ray(camOrigin, baseRayDirection + currentPixelJitter);
-      stagingImage(x, y) = RayColor(currentRay);
+
+      // TODO: Function to map orientation of XY (Y starting at bottom and going up)
+      // to target surface orientation (DX starts upper left, OGL lower left).
+      const uint32_t imageX = x;
+      const uint32_t imageY = (imageHeight - 1) - y;
+      stagingImage(imageX, imageY) = RayColor(currentRay);
     }
   }
   auto endTime = std::chrono::system_clock::now();
