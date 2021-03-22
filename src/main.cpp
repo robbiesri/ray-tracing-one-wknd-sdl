@@ -37,13 +37,49 @@ void UploadStagingImageToTexture(CPUImage &stagingImage,
   SDL_UnlockTexture(outputTexture);
 }
 
-template <class T> T lerp(double lerpVal, const T &a, const T &b) {
+template <class T>
+T lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
+bool HitSphere(const Point3 &sphereCenter, double sphereRadius,
+               const Ray &ray) {
+  // Normalized ray direction, a = 1
+  Vec3 scToRo = ray.origin() - sphereCenter;
+  auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
+  if (c < 0.0) {
+    // Discriminant will be positive, giving a real root
+    // Ray origin is inside sphere
+    return true;
+  }
+
+  // We can factor two out from quadratic root equation
+  auto b = dot(scToRo, ray.direction());
+  if (b > 0.0) {
+    // Ray starts outside sphere and points away.
+    // The vector from ray to sphere is reversed for
+    // scToRo, which is why we are testing for positive
+    // instead of negative, the usual check for dot products
+    return false;
+  }
+
+  double discriminant = (b * b) - c;
+  return !(discriminant < 0.0);
+
+  // Non-normalized ray direction
+  // Vec3 scToRo = ray.origin() - sphereCenter;
+  // auto a = dot(ray.direction(), ray.direction());
+  // auto b = 2.0 * dot(scToRo, ray.direction());
+  // auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
+  // auto discriminant = (b * b) - (4 * a * c);
+  // return (discriminant > 0.0);
+}
+
 Color3 RayColor(const Ray &r) {
-  Vec3 normalizedRayDirection = normalize(r.direction());
-  double lerpVal = 0.5 * (normalizedRayDirection.y() + 1.0);
+  if (HitSphere(Point3(0, 0, -1), 0.5, r)) {
+    return Color3(1, 0, 0);
+  }
+  double lerpVal = 0.5 * (r.direction().y() + 1.0);
   return lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
 }
 
@@ -99,7 +135,8 @@ int main(int argc, char **argv) {
   auto durationMilliseconds =
       std::chrono::duration_cast<std::chrono::milliseconds>(duration).count();
 
-  std::cout << "Image generation time: " << durationMilliseconds << " ms" << '\n';
+  std::cout << "Image generation time: " << durationMilliseconds << " ms"
+            << '\n';
 
   // Is this the right pixel format?
   SDL_Texture *streamingTexture =
