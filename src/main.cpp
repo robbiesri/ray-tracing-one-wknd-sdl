@@ -4,6 +4,7 @@
 #include "AssertUtils.h"
 #include "CPUImage.h"
 #include "Ray.h"
+#include "Sphere.h"
 
 #include <chrono>
 #include <cstdint>
@@ -42,69 +43,13 @@ T lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
-bool DoesRayHitSphere(const Point3 &sphereCenter, double sphereRadius,
-               const Ray &ray) {
-  // Normalized ray direction, a = 1
-  Vec3 scToRo = ray.origin() - sphereCenter;
-  auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
-  if (c < 0.0) {
-    // Discriminant will be positive, giving a real root
-    // Ray origin is inside sphere
-    return true;
-  }
-
-  // We can factor two out from quadratic root equation
-  auto b = dot(scToRo, ray.direction());
-  if (b > 0.0) {
-    // Ray starts outside sphere and points away.
-    // The vector from ray to sphere is reversed for
-    // scToRo, which is why we are testing for positive
-    // instead of negative, the usual check for dot products
-    return false;
-  }
-
-  double discriminant = (b * b) - c;
-  return !(discriminant < 0.0);
-
-  // Non-normalized ray direction
-  // Vec3 scToRo = ray.origin() - sphereCenter;
-  // auto a = dot(ray.direction(), ray.direction());
-  // auto b = 2.0 * dot(scToRo, ray.direction());
-  // auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
-  // auto discriminant = (b * b) - (4 * a * c);
-  // return (discriminant > 0.0);
-}
-
-double RaySphereIntersection(const Point3 &sphereCenter, double sphereRadius,
-                             const Ray &ray) {
-  Vec3 scToRo = ray.origin() - sphereCenter;
-  auto b = dot(scToRo, ray.direction());
-  auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
-  if ((c > 0.0) && (b > 0.0)) {
-    return -1.0;
-  }
-
-  double discriminant = (b * b) - c;
-  if (discriminant < 0.0) {
-    return -1.0;
-  }
-
-  double t = -b - std::sqrt(discriminant);
-
-  if (t < 0.0) {
-    // This is inside sphere, so clamp to 0 
-    t = 0.0f;
-  }
-
-  return t;
-}
-
 Color3 RayColor(const Ray &r) {
-  const Point3 sphereCenter(0, 0, -1);
-  double t = RaySphereIntersection(sphereCenter, 0.5, r);
-  if (!(t < 0.0)) {
-    Vec3 normal = normalize(r.at(t) - sphereCenter);
-    return (0.5 * Color3(normal.x() + 1.0, normal.y() + 1.0, normal.z() + 1.0));
+  static const Point3 sphereCenter(0, 0, -1);
+  static const Sphere sphere(sphereCenter, 0.5);
+  HitRecord hitRecord;
+  if (sphere.hit(r, 0.0, 1000.0, hitRecord)) {
+    return (0.5 * Color3(hitRecord.normal.x() + 1.0, hitRecord.normal.y() + 1.0,
+                         hitRecord.normal.z() + 1.0));
   }
 
   // This code is based on the viewport vertical size, which isn't accessible here

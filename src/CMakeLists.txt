@@ -6,7 +6,9 @@ list(APPEND PRIVATE_HDR_FILES
     AssertUtils.h
     ColorUtils.h
     CPUImage.h
+    Hittable.h
     Ray.h
+    Sphere.h
     TypedBitmask.h
     Vec3.h
 )
@@ -15,6 +17,7 @@ list(APPEND PRIVATE_SRC_FILES
     main.cpp
     AssertUtils.cpp
     ColorUtils.cpp
+    Sphere.cpp
 )
 
 add_executable(${PROJECT_NAME}
