@@ -42,7 +42,7 @@ T lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
-bool HitSphere(const Point3 &sphereCenter, double sphereRadius,
+bool DoesRayHitSphere(const Point3 &sphereCenter, double sphereRadius,
                const Ray &ray) {
   // Normalized ray direction, a = 1
   Vec3 scToRo = ray.origin() - sphereCenter;
@@ -75,10 +75,40 @@ bool HitSphere(const Point3 &sphereCenter, double sphereRadius,
   // return (discriminant > 0.0);
 }
 
-Color3 RayColor(const Ray &r) {
-  if (HitSphere(Point3(0, 0, -1), 0.5, r)) {
-    return Color3(1, 0, 0);
+double RaySphereIntersection(const Point3 &sphereCenter, double sphereRadius,
+                             const Ray &ray) {
+  Vec3 scToRo = ray.origin() - sphereCenter;
+  auto b = dot(scToRo, ray.direction());
+  auto c = dot(scToRo, scToRo) - (sphereRadius * sphereRadius);
+  if ((c > 0.0) && (b > 0.0)) {
+    return -1.0;
   }
+
+  double discriminant = (b * b) - c;
+  if (discriminant < 0.0) {
+    return -1.0;
+  }
+
+  double t = -b - std::sqrt(discriminant);
+
+  if (t < 0.0) {
+    // This is inside sphere, so clamp to 0 
+    t = 0.0f;
+  }
+
+  return t;
+}
+
+Color3 RayColor(const Ray &r) {
+  const Point3 sphereCenter(0, 0, -1);
+  double t = RaySphereIntersection(sphereCenter, 0.5, r);
+  if (!(t < 0.0)) {
+    Vec3 normal = normalize(r.at(t) - sphereCenter);
+    return (0.5 * Color3(normal.x() + 1.0, normal.y() + 1.0, normal.z() + 1.0));
+  }
+
+  // This code is based on the viewport vertical size, which isn't accessible here
+  // Additionally, we aren't clamping the colors here...
   double lerpVal = 0.5 * (r.direction().y() + 1.0);
   return lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
 }
@@ -92,6 +122,7 @@ int main(int argc, char **argv) {
   const double aspectRatio = double(imageWidth) / imageHeight;
 
   // Camera info
+  // Viewport size + lens distance from view point
   double viewportHeight = 2.0f;
   double viewportWidth = viewportHeight * aspectRatio;
   double focalLength = 1.0f;

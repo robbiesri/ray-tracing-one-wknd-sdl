@@ -22,6 +22,8 @@ uint32_t CountColorBits(ColorBits color) {
 uint32_t encodePixelIntoRGBA32(const Color3 &pixelRGB,
                                const SDL_PixelFormat &format) {
 
+  // TODO: Clamp the colors!!
+
   uint8_t red = static_cast<uint8_t>(pixelRGB[0] * 255.0);
   uint8_t green = static_cast<uint8_t>(pixelRGB[1] * 255.0);
   uint8_t blue = static_cast<uint8_t>(pixelRGB[2] * 255.0);
