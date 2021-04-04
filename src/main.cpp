@@ -2,13 +2,15 @@
 #include "SDL.h"
 
 #include "AssertUtils.h"
+#include "CoreUtils.h"
 #include "CPUImage.h"
-#include "Ray.h"
+#include "HittableList.h"
 #include "Sphere.h"
 
 #include <chrono>
-#include <cstdint>
 #include <vector>
+
+// Move this code into a TracingDriver class?
 
 void UploadStagingImageToTexture(CPUImage &stagingImage,
                                  SDL_Texture *outputTexture) {
@@ -43,13 +45,16 @@ T lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
-Color3 RayColor(const Ray &r) {
-  static const Point3 sphereCenter(0, 0, -1);
-  static const Sphere sphere(sphereCenter, 0.5);
+Color3 RayColor(const Ray &r, const Hittable& world) {
+  //static const Point3 sphereCenter(0, 0, -1);
+  //static const Sphere sphere(sphereCenter, 0.5);
+
+
   HitRecord hitRecord;
-  if (sphere.hit(r, 0.0, 1000.0, hitRecord)) {
-    return (0.5 * Color3(hitRecord.normal.x() + 1.0, hitRecord.normal.y() + 1.0,
-                         hitRecord.normal.z() + 1.0));
+  if (world.Hit(r, 0.0, kInfinity, hitRecord)) {
+    //return (0.5 * Color3(hitRecord.normal.x() + 1.0, hitRecord.normal.y() + 1.0,
+    //                     hitRecord.normal.z() + 1.0));
+    return (0.5 * (hitRecord.normal + Color3(1, 1, 1)));
   }
 
   // This code is based on the viewport vertical size, which isn't accessible here
@@ -90,6 +95,10 @@ int main(int argc, char **argv) {
 
   CPUImage stagingImage(imageWidth, imageHeight);
 
+  HittableList worldList;
+  worldList.Add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
+  worldList.Add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0));
+
   auto startTime = std::chrono::system_clock::now();
   const Vec3 baseRayDirection = upperLeftCorner - camOrigin;
 
@@ -108,7 +117,7 @@ int main(int argc, char **argv) {
       // to target surface orientation (DX starts upper left, OGL lower left).
       const uint32_t imageX = x;
       const uint32_t imageY = (imageHeight - 1) - y;
-      stagingImage(imageX, imageY) = RayColor(currentRay);
+      stagingImage(imageX, imageY) = RayColor(currentRay, worldList);
     }
   }
   auto endTime = std::chrono::system_clock::now();

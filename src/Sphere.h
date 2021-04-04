@@ -7,7 +7,7 @@ public:
   Sphere(const Point3 &center, double radius)
       : m_center(center), m_radius(radius) {}
 
-  virtual bool hit(const Ray &r, double tMin, double tMax,
+  virtual bool Hit(const Ray &r, double tMin, double tMax,
                    HitRecord &hitRecord) const override;
 
 private:

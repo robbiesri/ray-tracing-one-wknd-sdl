@@ -1,6 +1,6 @@
 #include "Sphere.h"
 
-bool Sphere::hit(const Ray &ray, double tMin, double tMax,
+bool Sphere::Hit(const Ray &ray, double tMin, double tMax,
                  HitRecord &hitRecord) const {
 
   Vec3 scToRo = ray.origin() - m_center;
@@ -31,7 +31,8 @@ bool Sphere::hit(const Ray &ray, double tMin, double tMax,
 
   hitRecord.t = t;
   hitRecord.hitPoint = ray.at(t);
-  hitRecord.normal = normalize(hitRecord.hitPoint - m_center);
+  Vec3 outwardNormal = normalize(hitRecord.hitPoint - m_center);
+  hitRecord.SetFaceNormal(ray, outwardNormal);
 
   return true;
 }

@@ -4,9 +4,11 @@ project(rt-main)
 
 list(APPEND PRIVATE_HDR_FILES
     AssertUtils.h
+    CoreUtils.h
     ColorUtils.h
     CPUImage.h
     Hittable.h
+    HittableList.h
     Ray.h
     Sphere.h
     TypedBitmask.h
@@ -17,6 +19,7 @@ list(APPEND PRIVATE_SRC_FILES
     main.cpp
     AssertUtils.cpp
     ColorUtils.cpp
+    HittableList.cpp
     Sphere.cpp
 )
 
