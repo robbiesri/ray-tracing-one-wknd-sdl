@@ -4,7 +4,6 @@
 
 #include "AssertUtils.h"
 #include "CPUImage.h"
-#include "CoreUtils.h"
 #include "HittableList.h"
 #include "Sphere.h"
 
@@ -70,29 +69,19 @@ void TraceEngine::GenerateImage(CPUImage &image) {
   worldList.Add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
   worldList.Add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0));
 
-  Vec3 horizontalViewportOffset = Vec3(m_viewportWidth, 0.0, 0.0);
-  Vec3 verticalViewportOffset = Vec3(0.0, m_viewportHeight, 0.0);
-  Vec3 upperLeftCorner = m_camOrigin - (horizontalViewportOffset / 2.0) -
-                         (verticalViewportOffset / 2.0) -
-                         Vec3(0., 0., m_focalLength);
-
   auto startTime = std::chrono::system_clock::now();
-  const Vec3 baseRayDirection = upperLeftCorner - m_camOrigin;
 
   for (uint32_t y = 0; y < m_windowHeight; y++) {
     const double v = double(y) / (m_windowHeight - 1);
-    const Vec3 verticalJitter = v * verticalViewportOffset;
     for (uint32_t x = 0; x < m_windowWidth; x++) {
       const double u = double(x) / (m_windowWidth - 1);
-      const Vec3 horizontalJitter = u * horizontalViewportOffset;
 
-      const Vec3 currentPixelJitter = horizontalJitter + verticalJitter;
-
-      Ray currentRay = Ray(m_camOrigin, baseRayDirection + currentPixelJitter);
+      Ray currentRay = m_camera.GetRay(u, v);
 
       // TODO: Function to map orientation of XY (Y starting at bottom and going
       // up) to target surface orientation (DX starts upper left, OGL lower
       // left).
+
       const uint32_t imageX = x;
       const uint32_t imageY = (m_windowHeight - 1) - y;
       image(imageX, imageY) = RayColor(currentRay, worldList);
@@ -122,6 +111,8 @@ bool TraceEngine::Init() {
   if (!m_renderer) {
     return false;
   }
+
+  m_camera = Camera(double(m_windowWidth) / m_windowHeight);
 
   return true;
 }

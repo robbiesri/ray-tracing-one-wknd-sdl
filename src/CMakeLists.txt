@@ -4,6 +4,7 @@ project(rt-main)
 
 list(APPEND PRIVATE_HDR_FILES
     AssertUtils.h
+    Camera.h
     CoreUtils.h
     ColorUtils.h
     CPUImage.h
@@ -19,7 +20,9 @@ list(APPEND PRIVATE_HDR_FILES
 list(APPEND PRIVATE_SRC_FILES
     main.cpp
     AssertUtils.cpp
+    Camera.cpp
     ColorUtils.cpp
+    CoreUtils.cpp
     HittableList.cpp
     Sphere.cpp
     TraceEngine.cpp

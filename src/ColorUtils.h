@@ -16,6 +16,8 @@ template <> struct enable_bitmask_operators<ColorBits> {
 
 uint32_t CountColorBits(ColorBits color);
 
+// Add multi-sampled version? Or have multi-sampled convertor?
 struct SDL_PixelFormat;
 uint32_t encodePixelIntoRGBA32(const Color3 &pixelRGB,
                                const SDL_PixelFormat &format);
+
