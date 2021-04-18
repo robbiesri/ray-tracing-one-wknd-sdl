@@ -11,7 +11,7 @@
 class CPUImage {
 public:
   CPUImage(uint32_t width, uint32_t height)
-      : m_width(width), m_height(height) {
+      : m_width(width), m_height(height), m_samples(1) {
     m_imageData.resize(m_width * m_height);
   }
 
@@ -26,6 +26,7 @@ public:
   std::vector<Color3> m_imageData;
   uint32_t m_width;
   uint32_t m_height;
+  uint32_t m_samples;
 };
 
 // Old image

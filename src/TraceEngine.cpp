@@ -30,8 +30,8 @@ void UploadStagingImageToTexture(CPUImage &stagingImage,
         ((rowIndex * outputSurface->pitch) / textureFormat->BytesPerPixel);
     for (uint32_t colIndex = 0; colIndex < (uint32_t)outputSurface->w;
          colIndex++) {
-      uint32_t encodedColor = encodePixelIntoRGBA32(
-          stagingImage(colIndex, rowIndex), *textureFormat);
+      uint32_t encodedColor = encodePixelIntoRGBA32(stagingImage(colIndex, rowIndex),
+                                stagingImage.m_samples, *textureFormat);
       outputRowAddress[colIndex] = encodedColor;
     }
   }
@@ -76,7 +76,15 @@ void TraceEngine::GenerateImage(CPUImage &image) {
     for (uint32_t x = 0; x < m_windowWidth; x++) {
       const double u = double(x) / (m_windowWidth - 1);
 
-      Ray currentRay = m_camera.GetRay(u, v);
+      Color3 pixelColor;
+      for (uint32_t sampleIndex = 0; sampleIndex < image.m_samples;
+           sampleIndex++) {
+        const double jitteredU = u + (RandomDouble() / (m_windowWidth - 1));
+        const double jitteredV = v + (RandomDouble() / (m_windowHeight - 1));
+
+        Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
+        pixelColor += RayColor(currentRay, worldList);
+      }
 
       // TODO: Function to map orientation of XY (Y starting at bottom and going
       // up) to target surface orientation (DX starts upper left, OGL lower
@@ -84,7 +92,7 @@ void TraceEngine::GenerateImage(CPUImage &image) {
 
       const uint32_t imageX = x;
       const uint32_t imageY = (m_windowHeight - 1) - y;
-      image(imageX, imageY) = RayColor(currentRay, worldList);
+      image(imageX, imageY) = pixelColor;
     }
   }
   auto endTime = std::chrono::system_clock::now();
@@ -119,6 +127,12 @@ bool TraceEngine::Init() {
 
 void TraceEngine::Run() {
   CPUImage stagingImage(m_windowWidth, m_windowHeight);
+
+#if defined(_DEBUG)
+  stagingImage.m_samples = 4;
+#else
+  stagingImage.m_samples = 16;
+#endif
 
   // Is this the right pixel format?
   SDL_Texture *streamingTexture = SDL_CreateTexture(

@@ -22,9 +22,9 @@ inline double DegreesToRadians(double degrees) {
 //  return min + (max - min) * random_double();
 //}
 
-inline double RandomDouble();
-inline double RandomDouble(double min, double max);
+double RandomDouble();
+double RandomDouble(double min, double max);
 
-inline double Clamp(double x, double min, double max);
+double Clamp(double x, double min, double max);
 
 #include "Ray.h"
