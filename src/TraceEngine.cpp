@@ -46,7 +46,7 @@ void UploadStagingImageToTexture(CPUImage &stagingImage,
 }
 
 template <class T>
-T lerp(double lerpVal, const T &a, const T &b) {
+T Lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
@@ -58,8 +58,8 @@ Color3 RayColor(const Ray &r, const Hittable &world) {
 
   // This code is based on the viewport vertical size, which isn't accessible
   // here Additionally, we aren't clamping the colors here...
-  double lerpVal = 0.5 * (r.direction().y() + 1.0);
-  return lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
+  double lerpVal = 0.5 * (r.Direction().y() + 1.0);
+  return Lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
 }
 
 void TraceEngine::GenerateImage(CPUImage &image) {

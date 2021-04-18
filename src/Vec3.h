@@ -36,11 +36,11 @@ public:
 
   Vec3 &operator/=(const double s) { return (*this *= 1 / s); }
 
-  double lengthSquared() {
+  double LengthSquared() {
     return (v[0] * v[0]) + (v[1] * v[1]) + (v[2] * v[2]);
   }
 
-  double length() { return std::sqrt(lengthSquared()); }
+  double Length() { return std::sqrt(LengthSquared()); }
 
 public:
   std::array<double, 3> v;
@@ -77,15 +77,15 @@ inline Vec3 operator/(const Vec3 &a, double c) {
   return (a * (1/c));
 }
 
-inline double dot(const Vec3 &a, const Vec3 &b) {
+inline double Dot(const Vec3 &a, const Vec3 &b) {
   return (a.v[0] * b.v[0]) + (a.v[1] * b.v[1]) + (a.v[2] * b.v[2]);
 }
 
-inline Vec3 cross(const Vec3 &a, const Vec3 &b) {
+inline Vec3 Cross(const Vec3 &a, const Vec3 &b) {
   return Vec3(
     (a.v[1]*b.v[2]) - (a.v[2] * b.v[1]),
     (a.v[2]*b.v[0]) - (a.v[0] * b.v[2]),
     (a.v[0]*b.v[1]) - (a.v[1] * b.v[0]));
 }
 
-inline Vec3 normalize(Vec3 v) { return (v / v.length()); }
+inline Vec3 Normalize(Vec3 v) { return (v / v.Length()); }

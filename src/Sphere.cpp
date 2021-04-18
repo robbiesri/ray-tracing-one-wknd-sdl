@@ -3,9 +3,9 @@
 bool Sphere::Hit(const Ray &ray, double tMin, double tMax,
                  HitRecord &hitRecord) const {
 
-  Vec3 scToRo = ray.origin() - m_center;
-  auto b = dot(scToRo, ray.direction());
-  auto c = dot(scToRo, scToRo) - (m_radius * m_radius);
+  Vec3 scToRo = ray.Origin() - m_center;
+  auto b = Dot(scToRo, ray.Direction());
+  auto c = Dot(scToRo, scToRo) - (m_radius * m_radius);
   if ((c > 0.0) && (b > 0.0)) {
     return false;
   }
@@ -30,8 +30,8 @@ bool Sphere::Hit(const Ray &ray, double tMin, double tMax,
   }
 
   hitRecord.t = t;
-  hitRecord.hitPoint = ray.at(t);
-  Vec3 outwardNormal = normalize(hitRecord.hitPoint - m_center);
+  hitRecord.hitPoint = ray.At(t);
+  Vec3 outwardNormal = Normalize(hitRecord.hitPoint - m_center);
   hitRecord.SetFaceNormal(ray, outwardNormal);
 
   return true;
