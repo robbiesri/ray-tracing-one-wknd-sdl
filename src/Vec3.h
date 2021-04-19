@@ -1,7 +1,8 @@
 #pragma once
 
+#include "CoreUtils.h"
+
 #include <array>
-#include <cmath>
 #include <iostream>
 
 // TODO Template types
@@ -41,6 +42,15 @@ public:
   }
 
   double Length() { return std::sqrt(LengthSquared()); }
+
+  inline static Vec3 Random() {
+    return Vec3(RandomDouble(), RandomDouble(), RandomDouble());
+  }
+
+  inline static Vec3 Random(double min, double max) {
+    return Vec3(RandomDouble(min, max), RandomDouble(min, max),
+                RandomDouble(min, max));
+  }
 
 public:
   std::array<double, 3> v;
@@ -89,3 +99,13 @@ inline Vec3 Cross(const Vec3 &a, const Vec3 &b) {
 }
 
 inline Vec3 Normalize(Vec3 v) { return (v / v.Length()); }
+
+inline Vec3 RandomInUnitSphere() {
+  while (true) {
+    Vec3 point = Vec3::Random(-1.0, 1.0);
+    if (point.LengthSquared() >= 1.0) {
+      continue;
+    }
+    return point;
+  }
+}

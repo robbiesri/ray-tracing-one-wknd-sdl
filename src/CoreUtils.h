@@ -26,5 +26,3 @@ double RandomDouble();
 double RandomDouble(double min, double max);
 
 double Clamp(double x, double min, double max);
-
-#include "Ray.h"

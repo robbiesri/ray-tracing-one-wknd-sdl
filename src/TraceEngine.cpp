@@ -50,10 +50,21 @@ T Lerp(double lerpVal, const T &a, const T &b) {
   return ((1.0 - lerpVal) * a) + (lerpVal * b);
 }
 
-Color3 RayColor(const Ray &r, const Hittable &world) {
+Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
+
+  if (depth <= 0) {
+    return Color3(0.0);
+  }
+
   HitRecord hitRecord;
   if (world.Hit(r, 0.0, kInfinity, hitRecord)) {
-    return (0.5 * (hitRecord.normal + Color3(1, 1, 1)));
+    //return (0.5 * (hitRecord.normal + Color3(1, 1, 1)));
+    Point3 target =
+        hitRecord.hitPoint + hitRecord.normal + RandomInUnitSphere();
+    Ray diffuseScatterRay(hitRecord.hitPoint, target - hitRecord.hitPoint);
+    // TODO: Remove hitpoint from target?
+     
+    return (0.5 * RayColor(diffuseScatterRay, world, depth - 1));
   }
 
   // This code is based on the viewport vertical size, which isn't accessible
@@ -83,7 +94,7 @@ void TraceEngine::GenerateImage(CPUImage &image) {
         const double jitteredV = v + (RandomDouble() / (m_windowHeight - 1));
 
         Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
-        pixelColor += RayColor(currentRay, worldList);
+        pixelColor += RayColor(currentRay, worldList, kTraceDepth);
       }
 
       // TODO: Function to map orientation of XY (Y starting at bottom and going
@@ -94,6 +105,10 @@ void TraceEngine::GenerateImage(CPUImage &image) {
       const uint32_t imageY = (m_windowHeight - 1) - y;
       image(imageX, imageY) = pixelColor;
     }
+
+    uint32_t progress = static_cast<uint32_t>((static_cast<double>(y) / m_windowHeight) * 100.0);
+    std::cout << "Image generation progress: " << progress << "%\r";
+    std::cout.flush();
   }
   auto endTime = std::chrono::system_clock::now();
   auto duration = endTime - startTime;
