@@ -19,7 +19,7 @@ protected:
   void GenerateImage(CPUImage& image);
 
 private:
-  static constexpr int32_t kTraceDepth = 10;
+  static constexpr int32_t kTraceDepth = 50;
   static constexpr uint32_t kDefaultWindowWidth = 640;
   static constexpr uint32_t kDefaultWindowHeight = 360;
 

@@ -57,7 +57,7 @@ Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
   }
 
   HitRecord hitRecord;
-  if (world.Hit(r, 0.0, kInfinity, hitRecord)) {
+  if (world.Hit(r, 0.001, kInfinity, hitRecord)) {
     //return (0.5 * (hitRecord.normal + Color3(1, 1, 1)));
     Point3 target =
         hitRecord.hitPoint + hitRecord.normal + RandomInUnitSphere();
