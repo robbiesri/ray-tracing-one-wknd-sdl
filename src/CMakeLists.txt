@@ -12,6 +12,7 @@ list(APPEND PRIVATE_HDR_FILES
     HittableList.h
     Ray.h
     Sphere.h
+    TaskProcessor.h
     TraceEngine.h
     TypedBitmask.h
     Vec3.h
@@ -25,6 +26,7 @@ list(APPEND PRIVATE_SRC_FILES
     CoreUtils.cpp
     HittableList.cpp
     Sphere.cpp
+    TaskProcessor.cpp
     TraceEngine.cpp
 )
 

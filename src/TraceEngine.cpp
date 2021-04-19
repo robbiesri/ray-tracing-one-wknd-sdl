@@ -80,35 +80,86 @@ void TraceEngine::GenerateImage(CPUImage &image) {
 
   auto startTime = std::chrono::system_clock::now();
 
-  for (uint32_t y = 0; y < m_windowHeight; y++) {
-    const double v = double(y) / (m_windowHeight - 1);
-    for (uint32_t x = 0; x < m_windowWidth; x++) {
-      const double u = double(x) / (m_windowWidth - 1);
+  static bool useTasks = true;
 
-      Color3 pixelColor;
-      for (uint32_t sampleIndex = 0; sampleIndex < image.m_samples;
-           sampleIndex++) {
-        const double jitteredU = u + (RandomDouble() / (m_windowWidth - 1));
-        const double jitteredV = v + (RandomDouble() / (m_windowHeight - 1));
+  if (useTasks) {
+    m_taskProcessor.start(6);
 
-        Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
-        pixelColor += RayColor(currentRay, worldList, kTraceDepth);
-      }
+    CPUImage *imagePtr = &image;
 
-      // TODO: Function to map orientation of XY (Y starting at bottom and going
-      // up) to target surface orientation (DX starts upper left, OGL lower
-      // left).
+    for (uint32_t yStart = 0; yStart < m_windowHeight; yStart += 4) {
 
-      const uint32_t imageX = x;
-      const uint32_t imageY = (m_windowHeight - 1) - y;
-      image(imageX, imageY) = pixelColor;
+
+      // How do I capture stuff?
+      // TraceEngine/this by const reference
+      // yStart by value
+      // CPUImage by mutable reference
+      m_taskProcessor.queue([=]()
+        {
+          for (uint32_t y = yStart; y < (yStart + 4); y++) {
+            const double v = double(y) / (m_windowHeight - 1);
+            for (uint32_t x = 0; x < m_windowWidth; x++) {
+              const double u = double(x) / (m_windowWidth - 1);
+
+              Color3 pixelColor;
+              for (uint32_t sampleIndex = 0; sampleIndex < imagePtr->m_samples;
+                   sampleIndex++) {
+                const double jitteredU =
+                    u + (RandomDouble() / (m_windowWidth - 1));
+                const double jitteredV =
+                    v + (RandomDouble() / (m_windowHeight - 1));
+
+                Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
+                pixelColor += RayColor(currentRay, worldList, kTraceDepth);
+              }
+
+              // TODO: Function to map orientation of XY (Y starting at bottom and
+              // going up) to target surface orientation (DX starts upper left,
+              // OGL lower left).
+
+              const uint32_t imageX = x;
+              const uint32_t imageY = (m_windowHeight - 1) - y;
+              (*imagePtr)(imageX, imageY) = pixelColor;
+            }
+          }
+        }
+      );
+
     }
 
-    uint32_t progress = static_cast<uint32_t>(
-        (static_cast<double>(y) / m_windowHeight) * 100.0);
-    std::cout << "Image generation progress: " << progress << "%\r";
-    std::cout.flush();
+    m_taskProcessor.finish();
+  } else {
+    for (uint32_t y = 0; y < m_windowHeight; y++) {
+      const double v = double(y) / (m_windowHeight - 1);
+      for (uint32_t x = 0; x < m_windowWidth; x++) {
+        const double u = double(x) / (m_windowWidth - 1);
+
+        Color3 pixelColor;
+        for (uint32_t sampleIndex = 0; sampleIndex < image.m_samples;
+             sampleIndex++) {
+          const double jitteredU = u + (RandomDouble() / (m_windowWidth - 1));
+          const double jitteredV = v + (RandomDouble() / (m_windowHeight - 1));
+
+          Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
+          pixelColor += RayColor(currentRay, worldList, kTraceDepth);
+        }
+
+        // TODO: Function to map orientation of XY (Y starting at bottom and
+        // going up) to target surface orientation (DX starts upper left, OGL
+        // lower left).
+
+        const uint32_t imageX = x;
+        const uint32_t imageY = (m_windowHeight - 1) - y;
+        image(imageX, imageY) = pixelColor;
+      }
+
+      uint32_t progress = static_cast<uint32_t>(
+          (static_cast<double>(y) / m_windowHeight) * 100.0);
+      std::cout << "Image generation progress: " << progress << "%\r";
+      std::cout.flush();
+    }
   }
+
   auto endTime = std::chrono::system_clock::now();
   auto duration = endTime - startTime;
   auto durationMilliseconds =

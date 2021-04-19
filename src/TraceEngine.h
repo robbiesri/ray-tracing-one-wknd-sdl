@@ -2,6 +2,7 @@
 
 #include "CoreUtils.h"
 #include "Camera.h"
+#include "TaskProcessor.h"
 
 struct SDL_Window;
 struct SDL_Renderer;
@@ -41,5 +42,7 @@ private:
   // SDL interface
   SDL_Window *m_window;
   SDL_Renderer *m_renderer;
+
+  tasks m_taskProcessor;
 
 };
