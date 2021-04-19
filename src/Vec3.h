@@ -111,3 +111,12 @@ inline Vec3 RandomInUnitSphere() {
 }
 
 inline Vec3 RandomUnitVector() { return Normalize(RandomInUnitSphere()); }
+
+inline Vec3 RandomInHemisphere(const Vec3& normal) {
+  Vec3 inUnitSphere = RandomInUnitSphere();
+  if (Dot(inUnitSphere, normal) > 0.0) {
+    return inUnitSphere;
+  } else {
+    return (-inUnitSphere);
+  }
+}

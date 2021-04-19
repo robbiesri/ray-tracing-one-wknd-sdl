@@ -59,7 +59,8 @@ Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
 
   HitRecord hitRecord;
   if (world.Hit(r, 0.001, kInfinity, hitRecord)) {
-    Point3 target = hitRecord.normal + RandomUnitVector();
+    //Point3 target = hitRecord.normal + RandomUnitVector(); // incorrect Lambertian distribution
+    Point3 target = RandomInHemisphere(hitRecord.normal); // hemispherical distribution
     Ray diffuseScatterRay(hitRecord.hitPoint, target);
 
     return (0.5 * RayColor(diffuseScatterRay, world, depth - 1));

@@ -7,6 +7,17 @@
 
 // Sourced from https://riptutorial.com/cplusplus/example/15806/create-a-simple-thread-pool
 
+// Additional inspiration
+// http://roar11.com/2016/01/a-platform-independent-thread-pool-using-c14/
+// https://github.com/reyreaud-l/threadpool
+// https://github.com/tghosgor/threadpool11
+
+// Pending features
+// * I'd like to be able to 'flush' the threadpool without shutting it down. I want to keep the async
+//   threads alive?
+// * I'd like to be able to get status back from the task queue
+// * I'd like to have per-thread queues with work stealing
+
 struct tasks {
   // the mutex, condition variable and deque form a single
   // thread-safe triggered queue of tasks:
