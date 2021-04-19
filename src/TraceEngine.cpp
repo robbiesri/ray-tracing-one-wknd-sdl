@@ -30,7 +30,8 @@ void UploadStagingImageToTexture(CPUImage &stagingImage,
         ((rowIndex * outputSurface->pitch) / textureFormat->BytesPerPixel);
     for (uint32_t colIndex = 0; colIndex < (uint32_t)outputSurface->w;
          colIndex++) {
-      uint32_t encodedColor = encodePixelIntoRGBA32(stagingImage(colIndex, rowIndex),
+      uint32_t encodedColor =
+          encodePixelIntoRGBA32(stagingImage(colIndex, rowIndex),
                                 stagingImage.m_samples, *textureFormat);
       outputRowAddress[colIndex] = encodedColor;
     }
@@ -58,12 +59,9 @@ Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
 
   HitRecord hitRecord;
   if (world.Hit(r, 0.001, kInfinity, hitRecord)) {
-    //return (0.5 * (hitRecord.normal + Color3(1, 1, 1)));
-    Point3 target =
-        hitRecord.hitPoint + hitRecord.normal + RandomInUnitSphere();
-    Ray diffuseScatterRay(hitRecord.hitPoint, target - hitRecord.hitPoint);
-    // TODO: Remove hitpoint from target?
-     
+    Point3 target = hitRecord.normal + RandomUnitVector();
+    Ray diffuseScatterRay(hitRecord.hitPoint, target);
+
     return (0.5 * RayColor(diffuseScatterRay, world, depth - 1));
   }
 
@@ -106,7 +104,8 @@ void TraceEngine::GenerateImage(CPUImage &image) {
       image(imageX, imageY) = pixelColor;
     }
 
-    uint32_t progress = static_cast<uint32_t>((static_cast<double>(y) / m_windowHeight) * 100.0);
+    uint32_t progress = static_cast<uint32_t>(
+        (static_cast<double>(y) / m_windowHeight) * 100.0);
     std::cout << "Image generation progress: " << progress << "%\r";
     std::cout.flush();
   }

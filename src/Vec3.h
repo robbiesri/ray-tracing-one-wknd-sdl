@@ -109,3 +109,5 @@ inline Vec3 RandomInUnitSphere() {
     return point;
   }
 }
+
+inline Vec3 RandomUnitVector() { return Normalize(RandomInUnitSphere()); }
