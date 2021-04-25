@@ -52,6 +52,14 @@ public:
                 RandomDouble(min, max));
   }
 
+  inline bool NearZero() const {
+
+    // TODO Pick an actually significant epsilon
+    const double kSmall = 1e-8;
+    return (std::fabs(v[0]) < kSmall) && (std::fabs(v[1]) < kSmall) &&
+           (std::fabs(v[2]) < kSmall);
+  }
+
 public:
   std::array<double, 3> v;
 };
@@ -83,19 +91,16 @@ inline Vec3 operator*(double c, const Vec3 &a) {
   return Vec3(a.v[0] * c, a.v[1] * c, a.v[2] * c);
 }
 
-inline Vec3 operator/(const Vec3 &a, double c) {
-  return (a * (1/c));
-}
+inline Vec3 operator/(const Vec3 &a, double c) { return (a * (1 / c)); }
 
 inline double Dot(const Vec3 &a, const Vec3 &b) {
   return (a.v[0] * b.v[0]) + (a.v[1] * b.v[1]) + (a.v[2] * b.v[2]);
 }
 
 inline Vec3 Cross(const Vec3 &a, const Vec3 &b) {
-  return Vec3(
-    (a.v[1]*b.v[2]) - (a.v[2] * b.v[1]),
-    (a.v[2]*b.v[0]) - (a.v[0] * b.v[2]),
-    (a.v[0]*b.v[1]) - (a.v[1] * b.v[0]));
+  return Vec3((a.v[1] * b.v[2]) - (a.v[2] * b.v[1]),
+              (a.v[2] * b.v[0]) - (a.v[0] * b.v[2]),
+              (a.v[0] * b.v[1]) - (a.v[1] * b.v[0]));
 }
 
 inline Vec3 Normalize(Vec3 v) { return (v / v.Length()); }
@@ -112,7 +117,7 @@ inline Vec3 RandomInUnitSphere() {
 
 inline Vec3 RandomUnitVector() { return Normalize(RandomInUnitSphere()); }
 
-inline Vec3 RandomInHemisphere(const Vec3& normal) {
+inline Vec3 RandomInHemisphere(const Vec3 &normal) {
   Vec3 inUnitSphere = RandomInUnitSphere();
   if (Dot(inUnitSphere, normal) > 0.0) {
     return inUnitSphere;
@@ -120,3 +125,5 @@ inline Vec3 RandomInHemisphere(const Vec3& normal) {
     return (-inUnitSphere);
   }
 }
+
+Vec3 Reflect(const Vec3 &v, const Vec3 &n);

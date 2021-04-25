@@ -10,6 +10,7 @@ list(APPEND PRIVATE_HDR_FILES
     CPUImage.h
     Hittable.h
     HittableList.h
+    Material.h
     Ray.h
     Sphere.h
     TaskProcessor.h
@@ -25,9 +26,11 @@ list(APPEND PRIVATE_SRC_FILES
     ColorUtils.cpp
     CoreUtils.cpp
     HittableList.cpp
+    Material.cpp
     Sphere.cpp
     TaskProcessor.cpp
     TraceEngine.cpp
+    Vec3.cpp
 )
 
 add_executable(${PROJECT_NAME}

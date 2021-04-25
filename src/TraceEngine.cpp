@@ -5,6 +5,7 @@
 #include "AssertUtils.h"
 #include "CPUImage.h"
 #include "HittableList.h"
+#include "Material.h"
 #include "Sphere.h"
 
 #include <chrono>
@@ -59,11 +60,12 @@ Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
 
   HitRecord hitRecord;
   if (world.Hit(r, 0.001, kInfinity, hitRecord)) {
-    //Point3 target = hitRecord.normal + RandomUnitVector(); // incorrect Lambertian distribution
-    Point3 target = RandomInHemisphere(hitRecord.normal); // hemispherical distribution
-    Ray diffuseScatterRay(hitRecord.hitPoint, target);
-
-    return (0.5 * RayColor(diffuseScatterRay, world, depth - 1));
+    Ray scattered = {Point3(), Vec3()};
+    Color3 attenuation;
+    if (hitRecord.matPtr->Scatter(r, hitRecord, attenuation, scattered)) {
+      return attenuation * RayColor(scattered, world, depth - 1);
+    }
+    return Color3();
   }
 
   // This code is based on the viewport vertical size, which isn't accessible
@@ -76,8 +78,19 @@ void TraceEngine::GenerateImage(CPUImage &image) {
 
   // TODO: Put the scene somewhere
   HittableList worldList;
-  worldList.Add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5));
-  worldList.Add(std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0));
+
+  auto matGround = std::make_shared<LambertianMaterial>(Color3(0.8, 0.8, 0.0));
+  auto matCenter = std::make_shared<LambertianMaterial>(Color3(0.7, 0.3, 0.3));
+  auto matLeft = std::make_shared<MetalMaterial>(Color3(0.8, 0.8, 0.8));
+  auto matRight = std::make_shared<MetalMaterial>(Color3(0.8, 0.6, 0.2));
+
+  worldList.Add(
+      std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0, matGround));
+  worldList.Add(std::make_shared<Sphere>(Point3(0, 0, -1), 0.5, matCenter));
+  worldList.Add(
+      std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, matLeft));
+  worldList.Add(
+      std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, matRight));
 
   auto startTime = std::chrono::system_clock::now();
 
@@ -90,42 +103,38 @@ void TraceEngine::GenerateImage(CPUImage &image) {
 
     for (uint32_t yStart = 0; yStart < m_windowHeight; yStart += 4) {
 
-
       // How do I capture stuff?
       // TraceEngine/this by const reference
       // yStart by value
       // CPUImage by mutable reference
-      m_taskProcessor.queue([=]()
-        {
-          for (uint32_t y = yStart; y < (yStart + 4); y++) {
-            const double v = double(y) / (m_windowHeight - 1);
-            for (uint32_t x = 0; x < m_windowWidth; x++) {
-              const double u = double(x) / (m_windowWidth - 1);
+      m_taskProcessor.queue([=]() {
+        for (uint32_t y = yStart; y < (yStart + 4); y++) {
+          const double v = double(y) / (m_windowHeight - 1);
+          for (uint32_t x = 0; x < m_windowWidth; x++) {
+            const double u = double(x) / (m_windowWidth - 1);
 
-              Color3 pixelColor;
-              for (uint32_t sampleIndex = 0; sampleIndex < imagePtr->m_samples;
-                   sampleIndex++) {
-                const double jitteredU =
-                    u + (RandomDouble() / (m_windowWidth - 1));
-                const double jitteredV =
-                    v + (RandomDouble() / (m_windowHeight - 1));
+            Color3 pixelColor;
+            for (uint32_t sampleIndex = 0; sampleIndex < imagePtr->m_samples;
+                 sampleIndex++) {
+              const double jitteredU =
+                  u + (RandomDouble() / (m_windowWidth - 1));
+              const double jitteredV =
+                  v + (RandomDouble() / (m_windowHeight - 1));
 
-                Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
-                pixelColor += RayColor(currentRay, worldList, kTraceDepth);
-              }
-
-              // TODO: Function to map orientation of XY (Y starting at bottom and
-              // going up) to target surface orientation (DX starts upper left,
-              // OGL lower left).
-
-              const uint32_t imageX = x;
-              const uint32_t imageY = (m_windowHeight - 1) - y;
-              (*imagePtr)(imageX, imageY) = pixelColor;
+              Ray currentRay = m_camera.GetRay(jitteredU, jitteredV);
+              pixelColor += RayColor(currentRay, worldList, kTraceDepth);
             }
+
+            // TODO: Function to map orientation of XY (Y starting at bottom and
+            // going up) to target surface orientation (DX starts upper left,
+            // OGL lower left).
+
+            const uint32_t imageX = x;
+            const uint32_t imageY = (m_windowHeight - 1) - y;
+            (*imagePtr)(imageX, imageY) = pixelColor;
           }
         }
-      );
-
+      });
     }
 
     m_taskProcessor.finish();

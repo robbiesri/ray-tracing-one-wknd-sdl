@@ -34,6 +34,8 @@ bool Sphere::Hit(const Ray &ray, double tMin, double tMax,
   Vec3 outwardNormal = Normalize(hitRecord.hitPoint - m_center);
   hitRecord.SetFaceNormal(ray, outwardNormal);
 
+  hitRecord.matPtr = matPtr;
+
   return true;
 }
 
