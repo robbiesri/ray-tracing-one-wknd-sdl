@@ -81,8 +81,8 @@ void TraceEngine::GenerateImage(CPUImage &image) {
 
   auto matGround = std::make_shared<LambertianMaterial>(Color3(0.8, 0.8, 0.0));
   auto matCenter = std::make_shared<LambertianMaterial>(Color3(0.7, 0.3, 0.3));
-  auto matLeft = std::make_shared<MetalMaterial>(Color3(0.8, 0.8, 0.8));
-  auto matRight = std::make_shared<MetalMaterial>(Color3(0.8, 0.6, 0.2));
+  auto matLeft = std::make_shared<MetalMaterial>(Color3(0.8, 0.8, 0.8), 0.3);
+  auto matRight = std::make_shared<MetalMaterial>(Color3(0.8, 0.6, 0.2), 1.0);
 
   worldList.Add(
       std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0, matGround));

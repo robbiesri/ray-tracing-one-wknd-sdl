@@ -25,8 +25,9 @@ bool LambertianMaterial::Scatter(const Ray &inRay, const HitRecord &hitRecord,
 
 bool MetalMaterial::Scatter(const Ray &inRay, const HitRecord &hitRecord,
                                  Color3 &attenuation, Ray &scattered) const {
-  Vec3 reflected = Reflect(Normalize(inRay.Direction()), hitRecord.normal);
   // TODO normalize reflected direction?
+  Vec3 reflected = Reflect(Normalize(inRay.Direction()), hitRecord.normal);
+  reflected += m_fuzz * RandomInUnitSphere();
 
   scattered = Ray(hitRecord.hitPoint, reflected);
   attenuation = m_albedo;
