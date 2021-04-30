@@ -197,8 +197,8 @@ bool TraceEngine::Init() {
     return false;
   }
 
-  m_camera = Camera(double(m_windowWidth) / m_windowHeight);
-
+  m_camera = Camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 90,
+                    double(m_windowWidth) / m_windowHeight);
   return true;
 }
 

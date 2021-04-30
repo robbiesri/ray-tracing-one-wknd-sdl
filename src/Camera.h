@@ -5,15 +5,17 @@
 
 class Camera {
 public:
-  Camera(double aspectRatio);
+  Camera() = default;
+  Camera(Point3 lookFrom, Point3 lookAt, Vec3 upVec, double verticalFOV, double aspectRatio);
 
-  Ray GetRay(double u, double v) const;
+  Ray GetRay(double s, double t) const;
 
 private:
+  double m_verticalFOV;
   double m_aspectRatio;
   double m_viewportHeight;
   double m_viewportWidth;
-  double m_focalLength = 1.0;
+  //double m_focalLength = 1.0;
 
   Point3 m_origin = Point3(0.0);
   //Point3 m_lowerLeftCorner;

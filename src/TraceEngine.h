@@ -10,7 +10,6 @@ class CPUImage;
 
 class TraceEngine {
 public:
-  TraceEngine() : m_camera(double(kDefaultWindowWidth) / kDefaultWindowHeight) {};
 
   bool Init();
 
@@ -30,13 +29,6 @@ private:
 
   // TODO: Separate image size
 
-  // Camera info
-  // Viewport size + lens distance from view point
-  //double m_viewportHeight = 2.0;
-  //double m_viewportWidth = m_viewportHeight * m_aspectRatio;
-  //double m_focalLength = 1.0;
-  //
-  //Point3 m_camOrigin = Point3(0.0);
   Camera m_camera;
 
   // SDL interface
