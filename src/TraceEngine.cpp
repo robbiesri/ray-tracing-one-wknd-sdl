@@ -80,9 +80,9 @@ void TraceEngine::GenerateImage(CPUImage &image) {
   HittableList worldList;
 
   auto matGround = std::make_shared<LambertianMaterial>(Color3(0.8, 0.8, 0.0));
-  auto matCenter = std::make_shared<LambertianMaterial>(Color3(0.7, 0.3, 0.3));
-  auto matLeft = std::make_shared<MetalMaterial>(Color3(0.8, 0.8, 0.8), 0.3);
-  auto matRight = std::make_shared<MetalMaterial>(Color3(0.8, 0.6, 0.2), 1.0);
+  auto matCenter = std::make_shared<LambertianMaterial>(Color3(0.1, 0.2, 0.5));
+  auto matLeft = std::make_shared<DielectricMaterial>(1.5);
+  auto matRight = std::make_shared<MetalMaterial>(Color3(0.8, 0.6, 0.2), 0.0);
 
   worldList.Add(
       std::make_shared<Sphere>(Point3(0, -100.5, -1), 100.0, matGround));

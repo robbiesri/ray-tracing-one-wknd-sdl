@@ -30,8 +30,20 @@ public:
   virtual bool Scatter(const Ray &inRay, const HitRecord &hitRecord,
                        Color3 &attenuation, Ray &scattered) const override;
 
-private:
+//private:
 public:
   Color3 m_albedo;
   double m_fuzz;
+};
+
+class DielectricMaterial : public IMaterial {
+public:
+  DielectricMaterial(double ior) : m_ior(ior) {}
+
+  virtual bool Scatter(const Ray &inRay, const HitRecord &hitRecord,
+                       Color3 &attenuation, Ray &scattered) const override;
+
+      //private:
+public:
+  double m_ior;
 };
