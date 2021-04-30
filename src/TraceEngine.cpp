@@ -197,8 +197,16 @@ bool TraceEngine::Init() {
     return false;
   }
 
-  m_camera = Camera(Point3(-2, 2, 1), Point3(0, 0, -1), Vec3(0, 1, 0), 90,
-                    double(m_windowWidth) / m_windowHeight);
+  Point3 lookFrom(3, 3, 2);
+  Point3 lookAt(0, 0, -1);
+  Vec3 camUp(0, 1, 0);
+  double distanceToFocus = (lookFrom - lookAt).Length();
+  double aperture = 2.0;
+  double verticalFOV = 20;
+  double aspectRatio = double(m_windowWidth) / m_windowHeight;
+
+  m_camera = Camera(lookFrom, lookAt, camUp, verticalFOV, aspectRatio, aperture, distanceToFocus);
+
   return true;
 }
 

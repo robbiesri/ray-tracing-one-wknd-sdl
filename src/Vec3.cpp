@@ -35,3 +35,13 @@ Vec3 RefractAlt(const Vec3 &I, const Vec3 &N, double ior) {
   double k = 1 - eta * eta * (1 - cosi * cosi);
   return k < 0 ? 0 : (eta * I) + ((eta * cosi - std::sqrt(k)) * n);
 }
+
+Vec3 RandomInUnitDisk() {
+  while (true) {
+    Vec3 p = Vec3(RandomDouble(-1.0, 1.0), RandomDouble(-1, 1), 0.0);
+    if (p.LengthSquared() >= 1.0) {
+      continue;
+    }
+    return p;
+  }
+}

@@ -130,3 +130,5 @@ Vec3 Reflect(const Vec3 &v, const Vec3 &n);
 
 Vec3 Refract(const Vec3 &i, const Vec3 &n, double etaI, double etaT);
 Vec3 RefractAlt(const Vec3 &I, const Vec3 &N, double ior);
+
+Vec3 RandomInUnitDisk();
