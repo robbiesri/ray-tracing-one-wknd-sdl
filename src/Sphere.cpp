@@ -31,7 +31,9 @@ bool Sphere::Hit(const Ray &ray, double tMin, double tMax,
 
   hitRecord.t = t;
   hitRecord.hitPoint = ray.At(t);
-  Vec3 outwardNormal = Normalize(hitRecord.hitPoint - m_center);
+
+  // We want to respect the sign of the radius in order to model hollow spheres
+  Vec3 outwardNormal = Normalize((hitRecord.hitPoint - m_center) / m_radius);
   hitRecord.SetFaceNormal(ray, outwardNormal);
 
   hitRecord.matPtr = matPtr;

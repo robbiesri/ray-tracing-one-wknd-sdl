@@ -90,6 +90,8 @@ void TraceEngine::GenerateImage(CPUImage &image) {
   worldList.Add(
       std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), 0.5, matLeft));
   worldList.Add(
+      std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, matLeft));
+  worldList.Add(
       std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, matRight));
 
   auto startTime = std::chrono::system_clock::now();
