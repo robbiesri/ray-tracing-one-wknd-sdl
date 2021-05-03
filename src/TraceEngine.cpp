@@ -74,8 +74,56 @@ Color3 RayColor(const Ray &r, const Hittable &world, int32_t depth) {
   return Lerp(lerpVal, Color3(1.0), Color3(0.5, 0.7, 1.0));
 }
 
+HittableList RandomScene() {
+  HittableList world;
+
+  auto matGround = std::make_shared<LambertianMaterial>(Color3(0.5));
+  world.Add(std::make_shared<Sphere>(Point3(0, -1000.0, 0), 1000.0, matGround));
+
+  for (int a = -11; a < 11; a++) {
+    for (int b = -11; b < 11; b++) {
+      const Point3 center(a + (0.9 * RandomDouble()), 0.2,
+                          b + (0.9 * RandomDouble()));
+
+      if ((center - Point3(4, 0.2, 0)).Length() > 0.9) {
+        std::shared_ptr<IMaterial> sphereMaterial;
+
+        const double materialChooser = RandomDouble();
+        if (materialChooser < 0.8) {
+          // diffuse
+          auto albedo = Color3::Random() * Color3::Random();
+          sphereMaterial = std::make_shared<LambertianMaterial>(albedo);
+          world.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+        } else if (materialChooser < 0.95) {
+          // metal
+          auto albedo = Color3::Random(0.5, 1);
+          auto fuzz = RandomDouble(0, 0.5);
+          sphereMaterial = std::make_shared<MetalMaterial>(albedo, fuzz);
+          world.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+        } else {
+          // glass
+          sphereMaterial = std::make_shared<DielectricMaterial>(1.5);
+          world.Add(std::make_shared<Sphere>(center, 0.2, sphereMaterial));
+        }
+      }
+    }
+  }
+
+  auto material1 = std::make_shared<DielectricMaterial>(1.5);
+  world.Add(std::make_shared<Sphere>(Point3(0, 1, 0), 1.0, material1));
+
+  auto material2 = std::make_shared<LambertianMaterial>(Color3(0.4, 0.2, 0.1));
+  world.Add(std::make_shared<Sphere>(Point3(-4, 1, 0), 1.0, material2));
+
+  auto material3 = std::make_shared<MetalMaterial>(Color3(0.7, 0.6, 0.5), 0.0);
+  world.Add(std::make_shared<Sphere>(Point3(4, 1, 0), 1.0, material3));
+
+  return world;
+}
+
 void TraceEngine::GenerateImage(CPUImage &image) {
 
+#if 0
   // TODO: Put the scene somewhere
   HittableList worldList;
 
@@ -93,6 +141,9 @@ void TraceEngine::GenerateImage(CPUImage &image) {
       std::make_shared<Sphere>(Point3(-1.0, 0.0, -1.0), -0.4, matLeft));
   worldList.Add(
       std::make_shared<Sphere>(Point3(1.0, 0.0, -1.0), 0.5, matRight));
+#endif
+
+  HittableList worldList = RandomScene();
 
   auto startTime = std::chrono::system_clock::now();
 
@@ -197,15 +248,18 @@ bool TraceEngine::Init() {
     return false;
   }
 
-  Point3 lookFrom(3, 3, 2);
-  Point3 lookAt(0, 0, -1);
+  Point3 lookFrom(12, 2, 3);
+  Point3 lookAt(0, 0, 0);
   Vec3 camUp(0, 1, 0);
-  double distanceToFocus = (lookFrom - lookAt).Length();
-  double aperture = 2.0;
+  // double distanceToFocus = (lookFrom - lookAt).Length();
+  double distanceToFocus = 10;
+  // double aperture = 2.0;
+  double aperture = 0.1;
   double verticalFOV = 20;
   double aspectRatio = double(m_windowWidth) / m_windowHeight;
 
-  m_camera = Camera(lookFrom, lookAt, camUp, verticalFOV, aspectRatio, aperture, distanceToFocus);
+  m_camera = Camera(lookFrom, lookAt, camUp, verticalFOV, aspectRatio, aperture,
+                    distanceToFocus);
 
   return true;
 }
